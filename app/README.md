@@ -14,7 +14,7 @@ What it measures, per model and compute-unit setting:
 - offline speech: `SFSpeechRecognizer` with `requiresOnDeviceRecognition = true`; the result records whether
   any network path was up (must be off: airplane mode, Bluetooth may stay on).
 
-Note: on the Mac, `phys_footprint` stayed ~25 MB with the Neural Engine because the ANE's copy of the weights
+Note: on the Mac, `phys_footprint` stays small with the Neural Engine because the ANE's copy of the weights
 is not charged to the app process. Treat the memory column as the app's own footprint, not total model memory.
 
 ### Build
