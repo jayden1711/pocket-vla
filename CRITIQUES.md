@@ -75,9 +75,10 @@ cannot beat a stated floor. Three seeds at each of two learning rates; every see
 Output: `results/student/overfit_<date>.json`, with a reading in `results/student/NOTES.md`. This only tests
 trainability and that the language path carries information; it is not a driving or generalisation result and
 will not be presented as one. Outcome: training as configured is not reliable (most runs did not fit the
-synthetic set; the tanh output head saturates early). So no claim is made that the student trains as-is.
-Follow-up experiment (not run): lr warmup, no tanh during training, or a smaller head init, on the same seeds,
-reporting every run.
+synthetic set; per-run results in the files above). So no claim is made that the student trains as-is.
+Saturation of the tanh output head is a suspected cause only; it was not measured. Follow-up experiment (not
+run): log pre-tanh activations, then try lr warmup, no tanh during training, or a smaller head init, on the
+same seeds, reporting every run.
 
 **B3. Unit tests are shape tests.** Addressed, within scope. [training/tests/test_student.py](training/tests/test_student.py)
 checks output shape and range, parameter count, that padded tokens are ignored, and that the split (text +
