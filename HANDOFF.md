@@ -1,6 +1,6 @@
 # HANDOFF (2026-11-06)
 Status: CRITIQUES.md, provenance + all-trials logging and Makefile on branch `critiques` (local); still no phone or robot run
-Next: Owner reviews CRITIQUES.md and the [verify] refs in README; then Xcode + iPhone Step 0 run (app/README.md)
+Next: Owner reviews CRITIQUES.md + [verify] refs; clean SmolVLA Mac bench on an idle Mac; then iPhone Step 0 (app/README.md)
 Updated: 2026-11-06 (daytime run, branch critiques)
 
 ## Daytime run 2026-11-06 (branch `critiques`, local commits, not pushed)
@@ -22,7 +22,11 @@ Updated: 2026-11-06 (daytime run, branch critiques)
 - Runs (outputs in git-ignored results/, read the NOTES there before using the student):
   student re-export with parity (results/step0/conversion/, history/); synthetic overfit check, 6 runs
   (results/student/overfit_*.json + results/student/NOTES.md); SmolVLA re-export and multi-trial Mac bench:
-  BENCH_STATUS
+  no clean SmolVLA multi-trial file: the attempts overlapped another bench (results/step0/mac_proxy/NOTES.md).
+  Student multi-trial Mac bench files exist (results/step0/mac_proxy/student_*_<date>.json).
+- bench_mac.py now refuses to start while another bench/export/training job runs (`--allow-concurrent` to
+  override, flagged) and records load average + such jobs per trial (CRITIQUES A8b). C1 states that no clean
+  like-for-like SmolVLA vs student pair exists yet.
 
 ## Decisions taken (daytime 2026-11-06)
 - Branch: the run brief said `day-1106`, the owner's repo decision said `critiques`; used `critiques` (the
@@ -37,8 +41,17 @@ Updated: 2026-11-06 (daytime run, branch critiques)
 - Old result files without provenance left as they are (not edited, not deleted); new runs write new files.
 - Overfit check runs two learning rates and reports both instead of tuning to one; CPU for determinism.
 - SmolVLA flow-step sweep (CRITIQUES C1 experiment) not run; left for the owner.
+- Afternoon: a SmolVLA bench started by an earlier session (PID 82289, `--n 20 --trials 5`, started 15:54 CST)
+  was still running. I did not kill it (not mine). I stopped my own SmolVLA bench before it wrote a file, and
+  marked the files that overlapped (and anything 82289 writes) as contaminated in results/step0/mac_proxy/NOTES.md
+  rather than deleting them. No SmolVLA vs student Mac table until a clean run exists.
+- Added the "refuse if another heavy job is running" guard to bench_mac.py, instead of only documenting the problem.
+- Two scratch files went to ~/.claude/jobs/.../tmp by mistake (the job's default temp dir); moved to results/_trash/.
 
 ## Blocked (daytime)
+- Clean SmolVLA multi-trial Mac bench: blocked by PID 82289 still running. When the Mac is idle, run
+  `make bench-mac MODELS=smolvla_base_s10_l16_fp16 N=50 TRIALS=5` (long: Neural Engine load takes minutes per
+  unit per trial; well over 10 min, so run it in chunks or by hand).
 - ~/projects/bin/make-index does not exist on this Mac (no ~/projects/ at all, so no ~/projects/NUC_RULES.md
   either); index not regenerated.
 - Phone/Xcode work: as before, needs Xcode + the owner's iPhone.

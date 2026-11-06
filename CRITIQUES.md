@@ -55,6 +55,13 @@ per-trial medians. Each run writes a new timestamped file; nothing is overwritte
 The older single-trial files `results/step0/mac_proxy/<model>.json` predate this change and carry no commit or
 date; they are kept unedited and superseded by `<model>_<date>.json`. The app stores every sample of a run.
 
+**A8b. Background load on the Mac contaminates timings.** Addressed in the harness from this commit on; earlier
+files limited. Overlapping benches, exports or training share the Neural Engine and CPU. `bench_mac.py` now
+refuses to start while another bench/export/training job is running (unless `--allow-concurrent`, which leaves
+a flagged record) and writes the load average and the list of such jobs into `provenance` and after every trial.
+Files written before this change do not have these fields; `results/step0/mac_proxy/NOTES.md` lists the
+SmolVLA files known to have overlapped another bench, which are kept but not used.
+
 **A9. One host, one toolchain.** Limitation. One Mac, one macOS, coremltools 9.0 with torch 2.15 (coremltools
 warns it is tested up to torch 2.7). Versions are in every result file; the exact environment is
 [training/requirements-mac.lock](training/requirements-mac.lock).
@@ -120,6 +127,11 @@ forward pass vs 10 flow-matching steps), parameter count, and weights (random vs
 - Each bench file records the model's input/output shapes (`io` in the Mac JSON, `settings.modelInputs` /
   `modelOutputs` in the app JSON) so a reader can check what was compared.
 - No quality comparison is possible: SmolVLA is pretrained on arm data; the student is untrained.
+- Status: no clean like-for-like latency pair exists yet. The student has multi-trial files from the current
+  harness; SmolVLA has only the older single-trial file (fewer predictions, no provenance) and multi-trial
+  attempts that overlapped another bench (see `results/step0/mac_proxy/NOTES.md`). The clean SmolVLA run is
+  `make bench-mac MODELS=smolvla_base_s10_l16_fp16`, on an otherwise idle Mac, with the same `N` and `TRIALS`
+  as the student files. Until it exists, no side-by-side Mac table is shown.
 Experiments that would make a fairer latency comparison (not run): a SmolVLA flow-step sweep
 (`export_smolvla.py --steps 1..10`) to separate head cost from backbone cost; latency per second of action
 horizon at matched control rate. A fair *quality* comparison needs both models trained on the same demos and

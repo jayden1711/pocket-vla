@@ -11,6 +11,8 @@ thermal envelope, so these numbers must never be quoted as phone numbers.
 Every trial is kept: the JSON holds each trial's raw latencies (ms) and stats, plus the median and
 spread of the per-trial medians. Each run writes a new timestamped file (nothing is overwritten), with
 the date, git commit, command line, tool versions, input/output shapes and the input seed.
+It refuses to start while another bench/export/training job is running (overlapping jobs share the
+Neural Engine and CPU), and records the load average and any such jobs before the run and after each trial.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import os
 import platform
 import resource
 import subprocess
@@ -81,7 +84,26 @@ def provenance() -> dict:
         "chip": run("sysctl", "-n", "machdep.cpu.brand_string"),
         "versions": {"coremltools": ct.__version__, "numpy": np.__version__, "python": platform.python_version()},
         "power_source": run("pmset", "-g", "batt"),
+        "load_avg_1_5_15": [round(x, 2) for x in os.getloadavg()],
+        "other_heavy_jobs": other_heavy_jobs(),
     }
+
+
+# Jobs that compete for the Neural Engine / CPU and would contaminate timings if they overlap a bench.
+HEAVY = ("bench_mac.py", "export_student.py", "export_smolvla.py", "export_omnivla_edge.py",
+         "overfit_student.py", "parity_ne.py")
+
+
+def other_heavy_jobs() -> list[str]:
+    r = subprocess.run(["ps", "-axo", "pid=,command="], capture_output=True, text=True)
+    me = os.getpid()
+    jobs = []
+    for line in r.stdout.splitlines():
+        pid, _, cmd = line.strip().partition(" ")
+        exe = cmd.split(" ", 1)[0]  # skip shell wrappers (sh -c "... bench_mac.py ...") such as make's
+        if pid.isdigit() and int(pid) != me and "python" in exe.lower() and any(h in cmd for h in HEAVY):
+            jobs.append(f"{pid} {cmd[:200]}")
+    return jobs
 
 
 def bench_unit(path: Path, uname: str, n: int, seconds: float) -> dict:
@@ -115,7 +137,14 @@ def main():
     ap.add_argument("--units", default="CPU_AND_NE,ALL,CPU_AND_GPU")
     ap.add_argument("--seconds", type=float, default=0, help="sustained run length per trial instead of --n")
     ap.add_argument("--out-dir", type=Path, default=REPO / "results" / "step0" / "mac_proxy")  # gitignored
+    ap.add_argument("--allow-concurrent", action="store_true",
+                    help="run even if another bench/export/training job is running (result is flagged)")
     args = ap.parse_args()
+
+    others = other_heavy_jobs()
+    if others and not args.allow_concurrent:
+        sys.exit("refusing to bench: other heavy jobs are running and would contaminate timings:\n  "
+                 + "\n  ".join(others) + "\n(wait for them, or pass --allow-concurrent to record a flagged result)")
 
     path = Path(args.model)
     spec = ct.models.MLModel(str(path), compute_units=ct.ComputeUnit.CPU_ONLY).get_spec()
@@ -131,6 +160,8 @@ def main():
         for uname in results["runs"]:
             r = bench_unit(path, uname, args.n, args.seconds)
             r["trial"] = trial
+            r["load_avg_1_5_15_after"] = [round(x, 2) for x in os.getloadavg()]
+            r["other_heavy_jobs_after"] = other_heavy_jobs()
             results["runs"][uname]["trials"].append(r)
             print(uname, trial, {k: v for k, v in r.items() if k != "latencies_ms"}, flush=True)
     for uname, u in results["runs"].items():
