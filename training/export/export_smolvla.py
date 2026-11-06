@@ -20,7 +20,7 @@ import numpy as np
 import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import convert  # noqa: E402
+from common import convert, record  # noqa: E402
 
 MODEL_ID = "lerobot/smolvla_base"
 MODEL_REV = "5e8d12a6e2975b0e5e5fce7c8caf47c371d257b6"  # pinned; recorded in PLAN.md
@@ -108,6 +108,8 @@ def main():
 
     from lerobot.policies.smolvla.modeling_smolvla import SmolVLAPolicy
 
+    torch.manual_seed(0)  # example image / noise below; recorded in the conversion log
+
     policy = SmolVLAPolicy.from_pretrained(MODEL_ID, revision=MODEL_REV)
     policy.eval().to("cpu", torch.float32)
     cfg = policy.config
@@ -144,11 +146,22 @@ def main():
     ]
     path, log = convert(name, traced, inputs, [ct.TensorType("actions", dtype=np.float32)], precision=args.precision)
     if path is not None:
-        ml = ct.models.MLModel(str(path), compute_units=ct.ComputeUnit.CPU_ONLY)
-        out = ml.predict({"image": ex[0].numpy(), "lang_tokens": ex[1].numpy(), "lang_mask": ex[2].numpy(),
-                          "robot_state": ex[3].numpy(), "noise": ex[4].numpy()})["actions"]
-        err = float(np.abs(out - ref.numpy()).max())
-        print(f"max |coreml - torch| = {err:.4f} (scale {float(np.abs(ref.numpy()).max()):.3f})")
+        feeds = {"image": ex[0].numpy(), "lang_tokens": ex[1].numpy(), "lang_mask": ex[2].numpy(),
+                 "robot_state": ex[3].numpy(), "noise": ex[4].numpy()}
+        scale = float(np.abs(ref.numpy()).max())
+        parity = {"ref_scale": scale, "inputs": "one fixed example (torch.manual_seed(0))"}
+        for label, cu in (("cpu_only", ct.ComputeUnit.CPU_ONLY), ("cpu_and_ne", ct.ComputeUnit.CPU_AND_NE)):
+            out = ct.models.MLModel(str(path), compute_units=cu).predict(feeds)["actions"]
+            err = float(np.abs(out - ref.numpy()).max())
+            parity[label] = {"max_abs_err": err, "mean_abs_err": float(np.abs(out - ref.numpy()).mean()),
+                             "finite": bool(np.isfinite(out).all())}
+            print(f"[{label}] max |coreml - torch| = {err:.4f} (scale {scale:.3f})")
+    record(name, log, model={"id": MODEL_ID, "revision": MODEL_REV}, seeds={"torch.manual_seed": 0},
+           settings={"steps": args.steps, "lang_len": args.lang, "image": "1x3x512x512", "chunk": cfg.chunk_size,
+                     "max_action_dim": cfg.max_action_dim, "instruction": "go to the chair\\n"},
+           params_M=round(n_params / 1e6, 1),
+           static_position_patch_max_diff=float((orig - ref).abs().max()),
+           **({"parity_vs_torch": parity} if path is not None else {}))
 
 
 if __name__ == "__main__":

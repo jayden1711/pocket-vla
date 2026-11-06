@@ -12,7 +12,10 @@ import collections
 import io
 import json
 import logging
+import datetime
 import platform
+import subprocess
+import sys
 import time
 import traceback
 from contextlib import redirect_stderr, redirect_stdout
@@ -42,6 +45,20 @@ OUT_DIR = REPO / "training" / "out"  # gitignored: mlpackages, checkpoints
 LOG_DIR = REPO / "results" / "step0" / "conversion"  # gitignored until approved
 
 
+def provenance() -> dict:
+    """Who/what/when for a result file: UTC date, git commit (+ dirty flag), exact command line."""
+    def git(*a):
+        r = subprocess.run(["git", "-C", str(REPO), *a], capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else None
+
+    return {
+        "date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+        "git_commit": git("rev-parse", "HEAD"),
+        "git_dirty": bool(git("status", "--porcelain", "--untracked-files=no")),
+        "argv": sys.argv,
+    }
+
+
 def versions() -> dict:
     import transformers
 
@@ -58,7 +75,7 @@ def convert(name: str, traced, inputs, outputs, *, precision="fp16", target=ct.t
     """Convert a traced module to an .mlpackage. Never raises; failures are logged."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    log = {"name": name, "versions": versions(), "precision": precision, "target": str(target)}
+    log = {"name": name, "provenance": provenance(), "versions": versions(), "precision": precision, "target": str(target)}
     buf = io.StringIO()
     handler = logging.StreamHandler(buf)
     logging.getLogger("coremltools").addHandler(handler)
@@ -128,6 +145,18 @@ def dir_size(p: Path) -> int:
     return sum(f.stat().st_size for f in p.rglob("*") if f.is_file())
 
 
+def record(name: str, log: dict, **fields) -> None:
+    """Add fields (model ID/revision, seeds, export settings, Core ML vs torch check) to the conversion log
+    and rewrite it, so every claim about a conversion lives in a results file."""
+    log.update(fields)
+    write_log(name, log)
+
+
 def write_log(name: str, log: dict) -> None:
-    (LOG_DIR / f"{name}.json").write_text(json.dumps(log, indent=2, default=str))
+    """Latest log at <name>.json; every attempt (including failed ones) also kept under history/."""
+    text = json.dumps(log, indent=2, default=str)
+    (LOG_DIR / f"{name}.json").write_text(text)
+    stamp = log.get("provenance", {}).get("date_utc", "undated").replace(":", "-")
+    (LOG_DIR / "history").mkdir(parents=True, exist_ok=True)
+    (LOG_DIR / "history" / f"{name}_{stamp}.json").write_text(text)
     print(f"[{name}] {log['status']}  ->  {LOG_DIR / (name + '.json')}")

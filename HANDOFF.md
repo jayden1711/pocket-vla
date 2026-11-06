@@ -1,7 +1,44 @@
 # HANDOFF (2026-11-06)
-Status: Firmware written (not hardware-tested); SmolVLA + 76M student convert to Core ML, Mac proxy benches done; iOS bench app written, not built
-Next: Install Xcode + XcodeGen, build app/Bench, run Step 0 on the iPhone (needs the owner + phone)
-Updated: 2026-11-06 (overnight run)
+Status: CRITIQUES.md, provenance + all-trials logging and Makefile on branch `critiques` (local); still no phone or robot run
+Next: Owner reviews CRITIQUES.md and the [verify] refs in README; then Xcode + iPhone Step 0 run (app/README.md)
+Updated: 2026-11-06 (daytime run, branch critiques)
+
+## Daytime run 2026-11-06 (branch `critiques`, local commits, not pushed)
+- CRITIQUES.md at the repo root: each criticism is answered as addressed / experiment / limitation and points
+  to files in results/. Covers the owner's three: Mac proxy is not phone, student untested, SmolVLA like-for-like.
+- Provenance on every result: bench_mac.py and the export scripts record UTC date, git commit + dirty flag,
+  argv, versions, seeds, settings and model I/O shapes. bench_mac.py now runs `--trials` (default 5), keeps
+  every raw latency, reports median/p5/p95/min/max/std per trial and the spread of trial medians, and writes
+  a new timestamped file per run (old single-trial files kept unedited). Conversion logs keep every attempt
+  under results/step0/conversion/history/ and include Core ML vs torch parity on the CPU and Neural Engine paths.
+- SmolVLA export now seeds its example input (it was unseeded) and logs model ID + revision + settings.
+- App: BenchResult gains `settings` (runs, warmup, input seed, Low Power Mode, app version, model I/O shapes).
+  Type-checks against the macOS SDK; still not built for iOS.
+- Makefile: one target per result family (test, export-student, export-smolvla, bench-mac, overfit-student,
+  firmware-build). training/requirements-mac.lock = exact frozen venv.
+- training/tests/overfit_student.py: SYNTHETIC trainability check (3 seeds x 2 learning rates, all kept).
+- README: status line, reproduction commands, prior work ([verify] marks), NVIDIA/Quatern disclosure.
+  PLAN: unsourced BitVLA timing replaced by [verify]; links to CRITIQUES.md.
+RUNS_PLACEHOLDER
+
+## Decisions taken (daytime 2026-11-06)
+- Branch: the run brief said `day-1106`, the owner's repo decision said `critiques`; used `critiques` (the
+  owner's, more specific). Worktree: .claude/worktrees/critiques.
+- Prior work: cited only what looks relevant (SmolVLA, OmniVLA, BitVLA, vla.cpp, MetaMorph, URMA), all
+  [verify] since nothing was checked on the web. NOT cited: the MIT weight-space post, PicoGPT, Hirundo /
+  CrowdStrike / Booz Allen, RoboStriker (arXiv 2601.22517), Text2Robot: their content and relevance to a phone
+  VLA could not be checked without the web. Owner: add any that apply (RoboStriker may belong under CRITIQUES
+  D5 if it is about attacks on robot policies).
+- Removed the BitVLA phone timing from PLAN (unsourced number), replaced with [verify].
+- Disclosure added to README (training is planned on NVIDIA RTX hardware).
+- Old result files without provenance left as they are (not edited, not deleted); new runs write new files.
+- Overfit check runs two learning rates and reports both instead of tuning to one; CPU for determinism.
+- SmolVLA flow-step sweep (CRITIQUES C1 experiment) not run; left for the owner.
+
+## Blocked (daytime)
+- ~/projects/bin/make-index does not exist on this Mac (no ~/projects/ at all, so no ~/projects/NUC_RULES.md
+  either); index not regenerated.
+- Phone/Xcode work: as before, needs Xcode + the owner's iPhone.
 
 ## Done
 - Repo skeleton: firmware/, app/, training/, eval/, PLAN.md (licenses, decisions, plan).
@@ -72,8 +109,7 @@ Note: coremltools 9.0 warns torch 2.15 is untested (tested up to 2.7). Conversio
 - Bench app memory is phys_footprint of the app process. On the Mac with the Neural Engine it stays small
   because the ANE's weight copy is not charged to the process; noted in app/README.md so the phone memory
   column isn't misread as total model memory.
-- Work is on branch `worktree-overnight-student` (local commits, not pushed, not merged into main).
-  Results JSONs were copied into the main checkout's git-ignored results/step0/.
+- Overnight work was merged into main and pushed by the owner (2026-11-06).
 
 ## Open decisions for you
 - Exact iPhone model (affects ANE generation / expectations).
@@ -81,7 +117,9 @@ Note: coremltools 9.0 warns torch 2.15 is untested (tested up to 2.7). Conversio
 - SmolVLA chunk is 50 steps (5 s at 10 Hz) of 32-dim arm actions; a 2-output drive head discards most pretraining (as you noted).
 - BLE has no pairing/auth; add bonding before the demo?
 - OK to run export_omnivla_edge.py (executes upstream OmniVLA model code, downloads the 434 MB MIT checkpoint)?
-- Merge `worktree-overnight-student` into main (e.g. `git merge --ff-only worktree-overnight-student`)?
+- Merge `critiques` into main? Review CRITIQUES.md and the [verify] references in README first.
+- Which of the unverified references (MIT weight-space post, PicoGPT, Hirundo / CrowdStrike / Booz Allen,
+  RoboStriker, Text2Robot) belong in README?
 
 ## Uncommitted (on purpose, gitignored)
 - training/.venv, training/out/*.mlpackage, firmware/build, firmware/sdkconfig: all regenerable with the commands above.

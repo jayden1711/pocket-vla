@@ -24,7 +24,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "models"))
-from common import convert  # noqa: E402
+from common import convert, record  # noqa: E402
 from student import StudentConfig, StudentVLA, param_counts  # noqa: E402
 
 
@@ -47,13 +47,16 @@ class PolicyOnly(torch.nn.Module):
 
 
 def check(path: Path, feeds: dict, ref: torch.Tensor, out_name: str) -> dict:
-    ml = ct.models.MLModel(str(path), compute_units=ct.ComputeUnit.CPU_ONLY)
-    out = ml.predict({k: v.numpy() for k, v in feeds.items()})[out_name]
-    err = float(np.abs(out - ref.numpy()).max())
-    scale = float(np.abs(ref.numpy()).max())
-    finite = bool(np.isfinite(out).all())
-    print(f"  {path.name}: max |coreml - torch| = {err:.4f} (scale {scale:.3f}), finite={finite}")
-    return {"max_abs_err_vs_torch_cpu_only": err, "ref_scale": scale, "finite": finite}
+    """Core ML vs torch (fp32 CPU) on one fixed seeded input, on the CPU path and on the Neural Engine path."""
+    res = {"ref_scale": float(np.abs(ref.numpy()).max()), "inputs": "one fixed example (seed 1)"}
+    for label, cu in (("cpu_only", ct.ComputeUnit.CPU_ONLY), ("cpu_and_ne", ct.ComputeUnit.CPU_AND_NE)):
+        ml = ct.models.MLModel(str(path), compute_units=cu)
+        out = ml.predict({k: v.numpy() for k, v in feeds.items()})[out_name]
+        err = float(np.abs(out - ref.numpy()).max())
+        res[label] = {"max_abs_err": err, "mean_abs_err": float(np.abs(out - ref.numpy()).mean()),
+                      "finite": bool(np.isfinite(out).all())}
+        print(f"  {path.name} [{label}]: max |coreml - torch| = {err:.4f} (scale {res['ref_scale']:.3f})")
+    return res
 
 
 def main():
@@ -102,8 +105,12 @@ def main():
     ]
     for name, traced, inputs, outputs, feeds, ref, out_name in jobs:
         path, log = convert(name, traced, inputs, outputs, precision=p)
+        extra = {"model": "student (random weights, untrained; training/models/student.py)",
+                 "seeds": {"weights": "torch.manual_seed(0)", "example_inputs": "torch.Generator().manual_seed(1)"},
+                 "config": vars(c), "params": param_counts(model)}
         if path is not None:
-            check(path, feeds, ref, out_name)
+            extra["parity_vs_torch"] = check(path, feeds, ref, out_name)
+        record(name, log, **extra)
 
 
 if __name__ == "__main__":

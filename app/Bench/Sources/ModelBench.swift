@@ -67,6 +67,9 @@ struct BenchResult: Codable {
     let passBar: Bool?
     let passBarRule: String
     let note: String
+    /// Run settings + provenance (runs, warmup, input seed, Low Power Mode, app build, model I/O shapes),
+    /// so a like-for-like comparison can be checked from the file alone.
+    let settings: [String: String]
     let samples: [Sample]
 }
 
@@ -195,7 +198,27 @@ func runBench(modelURL: URL, config: BenchConfig, progress: (Double, Double) -> 
         thermalCounts: counts, passBar: pass,
         passBarRule: "p95 over the last 60 s of a >=10-min run <= 1000 ms and <= 40% of chunkSeconds",
         note: isCancelled() ? "cancelled early" : "fixed synthetic inputs; app process footprint incl. UI",
+        settings: runSettings(model: model, config: config),
         samples: samples)
+}
+
+func runSettings(model: MLModel, config: BenchConfig) -> [String: String] {
+    func shapes(_ d: [String: MLFeatureDescription]) -> String {
+        d.keys.sorted().map { k in
+            let s = d[k]?.multiArrayConstraint?.shape.map { "\($0)" }.joined(separator: "x") ?? "?"
+            return "\(k)=\(s)"
+        }.joined(separator: ",")
+    }
+    let info = Bundle.main.infoDictionary ?? [:]
+    return [
+        "runs": "\(config.runs)", "warmup": "\(config.warmup)",
+        "sustainedSecondsRequested": "\(config.sustainedSeconds)",
+        "inputs": "float: SplitMix64(seed 0) uniform [0,1); int32: ones",
+        "lowPowerMode": "\(ProcessInfo.processInfo.isLowPowerModeEnabled)",
+        "appVersion": "\(info["CFBundleShortVersionString"] ?? "?") (\(info["CFBundleVersion"] ?? "?"))",
+        "modelInputs": shapes(model.modelDescription.inputDescriptionsByName),
+        "modelOutputs": shapes(model.modelDescription.outputDescriptionsByName),
+    ]
 }
 
 enum Clock {

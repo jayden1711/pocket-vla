@@ -1,12 +1,15 @@
 # pocket-vla plan
 
-Claim (use verbatim): "a phone VLA driving a real robot." Never "first VLA on a phone" (BitVLA already runs on iPhone, ~9 s/action).
+Claim (use verbatim): "a phone VLA driving a real robot." Never "first VLA on a phone" (BitVLA is reported to already run on an iPhone [verify: source and timing]).
 Phone: iPhone (exact model TBD). Runtime: Core ML.
 
 ## Status
 - Step 0: in progress. See HANDOFF.md. SmolVLA and the 76M student convert to Core ML; bench app (app/Bench) written but not built (needs Xcode). Only Mac-proxy timings so far, no phone numbers yet.
 - Step 1: firmware written, host-tested, builds for ESP32-S3. Not yet on hardware.
 - Steps 2-6: not started (plan below).
+
+Open criticisms and how each is answered (addressed / experiment / limitation): [CRITIQUES.md](CRITIQUES.md).
+Result commands: [Makefile](Makefile). Prior work and disclosure: [README.md](README.md).
 
 ## Decisions
 - Firmware uses ESP-IDF + NimBLE (both Apache-2.0), NOT the Arduino-ESP32 core (LGPL-2.1, violates license rule).
@@ -31,7 +34,9 @@ Phone: iPhone (exact model TBD). Runtime: Core ML.
 
 License risks: OmniVLA (full) is fine-tuned from openvla-7b, whose LLM is Llama 2 (Llama 2 Community License, not Apache/BSD/MIT). Distilling from it needs a decision. OmniVLA-edge uses EfficientNet-B0 (efficientnet_pytorch, Apache-2.0) + OpenAI CLIP text features (MIT); verify those pins before use. BDD images in OmniVLA data carry the BDD license.
 
-## Step 0 results so far (Mac M3 PROXY, not phone)
+## Step 0 results so far (Mac M3 PROXY, not phone; student = random weights)
+Any student vs SmolVLA latency comparison must list image size, chunk, flow steps, params and weights per row
+(CRITIQUES.md C1); no "N times faster" claim.
 SmolVLA base, 1 cam 512x512, 16 lang tokens, 10 Euler steps, fp16, chunk 50 (= 5.0 s at 10 Hz).
 Numbers are in `results/step0/` (git-ignored) until the owner approves publishing.
 
