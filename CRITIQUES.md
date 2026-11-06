@@ -79,11 +79,14 @@ information; it is not a driving or generalisation result and will not be presen
 checks output shape and range, parameter count, that padded tokens are ignored, and that the split (text +
 policy) export equals the full model. These are correctness checks of the code, not of behaviour.
 
-**B4. Does the Core ML model compute the same thing as PyTorch?** Addressed (from this commit on; re-export to
-populate). Export scripts now write a `parity_vs_torch` block (max and mean abs error vs fp32 torch, finiteness)
-for both the CPU path and the Neural Engine path into `results/step0/conversion/<name>.json`, and keep every
-attempt under `results/step0/conversion/history/`. Limitation: parity is checked on one fixed seeded input, not
-a distribution of real inputs.
+**B4. Does the Core ML model compute the same thing as PyTorch?** Addressed for the student; SmolVLA see C3.
+Export scripts write a `parity_vs_torch` block (max and mean abs error vs the fp32 torch output, its scale,
+finiteness) for both the CPU path and the Neural Engine path into `results/step0/conversion/<name>.json`, and
+keep every attempt under `results/step0/conversion/history/` (`make export-student`). Each Core ML run happens in
+a fresh torch-free process ([training/export/parity_ne.py](training/export/parity_ne.py) explains why).
+Limitations: one fixed seeded input, not a distribution of real inputs; random weights; and no pass/fail
+tolerance is defined. Whether the fp16 error matters for control can only be judged on the trained model in
+closed loop, so "matches PyTorch" is not claimed beyond what the logged errors show.
 
 **B5. Random-weight latency may not equal trained-model latency.** Limitation. For dense fp16 weights the compute
 is the same; once trained weights are quantised or pruned (PLAN Step 4) latency changes, so the model is

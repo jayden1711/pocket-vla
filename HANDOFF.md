@@ -39,6 +39,9 @@ RUNS_PLACEHOLDER
 - ~/projects/bin/make-index does not exist on this Mac (no ~/projects/ at all, so no ~/projects/NUC_RULES.md
   either); index not regenerated.
 - Phone/Xcode work: as before, needs Xcode + the owner's iPhone.
+- Loading an .mlpackage with CPU_AND_NE inside the export process (torch 2.15 + coremltools 9.0) segfaulted;
+  it works in a torch-free process, so parity runs in a subprocess (training/export/parity_ne.py). Another
+  reason to try torch 2.7 (coremltools' tested version).
 
 ## Done
 - Repo skeleton: firmware/, app/, training/, eval/, PLAN.md (licenses, decisions, plan).
@@ -69,8 +72,10 @@ RUNS_PLACEHOLDER
 - Pass bar check (p95 after 10 min <= 1 s and <= 40% of chunk duration) cannot be judged until the phone run.
 
 ## Resume commands
+Shortcut: `make test export-student export-smolvla bench-mac overfit-student` (see Makefile). Long form:
 ```
 cd pocket-vla
+uv pip install --python training/.venv/bin/python -r training/requirements-mac.lock   # exact frozen env
 uv venv --python 3.12 training/.venv
 uv pip install --python training/.venv/bin/python torch coremltools "lerobot[smolvla] @ git+https://github.com/huggingface/lerobot@d490e472a5d1" efficientnet_pytorch==0.7.1
 training/.venv/bin/python training/export/export_smolvla.py           # ~6 min, writes training/out/*.mlpackage + results/step0/conversion/*.json
