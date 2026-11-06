@@ -24,7 +24,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "models"))
-from common import convert, record  # noqa: E402
+from common import convert, parity, record  # noqa: E402
 from student import StudentConfig, StudentVLA, param_counts  # noqa: E402
 
 
@@ -47,16 +47,8 @@ class PolicyOnly(torch.nn.Module):
 
 
 def check(path: Path, feeds: dict, ref: torch.Tensor, out_name: str) -> dict:
-    """Core ML vs torch (fp32 CPU) on one fixed seeded input, on the CPU path and on the Neural Engine path."""
-    res = {"ref_scale": float(np.abs(ref.numpy()).max()), "inputs": "one fixed example (seed 1)"}
-    for label, cu in (("cpu_only", ct.ComputeUnit.CPU_ONLY), ("cpu_and_ne", ct.ComputeUnit.CPU_AND_NE)):
-        ml = ct.models.MLModel(str(path), compute_units=cu)
-        out = ml.predict({k: v.numpy() for k, v in feeds.items()})[out_name]
-        err = float(np.abs(out - ref.numpy()).max())
-        res[label] = {"max_abs_err": err, "mean_abs_err": float(np.abs(out - ref.numpy()).mean()),
-                      "finite": bool(np.isfinite(out).all())}
-        print(f"  {path.name} [{label}]: max |coreml - torch| = {err:.4f} (scale {res['ref_scale']:.3f})")
-    return res
+    return parity(path, {k: v.numpy() for k, v in feeds.items()}, ref.numpy(), out_name,
+                  "one fixed example (torch.Generator().manual_seed(1))")
 
 
 def main():

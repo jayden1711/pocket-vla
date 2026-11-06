@@ -145,6 +145,29 @@ def dir_size(p: Path) -> int:
     return sum(f.stat().st_size for f in p.rglob("*") if f.is_file())
 
 
+def parity(path: Path, feeds: dict, ref, out_name: str, inputs_note: str) -> dict:
+    """Core ML vs torch (fp32 CPU reference) on one fixed input, on the CPU path and the Neural Engine path.
+    Each Core ML run happens in a fresh process without torch (see parity_ne.py for why)."""
+    import tempfile
+
+    import numpy as np
+
+    ref = np.asarray(ref)
+    res = {"ref_scale": float(np.abs(ref).max()), "inputs": inputs_note, "reference": "torch fp32 CPU"}
+    with tempfile.TemporaryDirectory() as td:
+        np.savez(f"{td}/feeds.npz", **{k: np.asarray(v) for k, v in feeds.items()})
+        np.save(f"{td}/ref.npy", ref)
+        for label, unit in (("cpu_only", "CPU_ONLY"), ("cpu_and_ne", "CPU_AND_NE")):
+            r = subprocess.run([sys.executable, "-I", str(Path(__file__).parent / "parity_ne.py"), str(path),
+                                f"{td}/feeds.npz", f"{td}/ref.npy", out_name, unit], capture_output=True, text=True)
+            try:
+                res[label] = json.loads(r.stdout.strip().splitlines()[-1])
+            except (IndexError, json.JSONDecodeError):
+                res[label] = {"error": f"exit {r.returncode}", "stderr_tail": r.stderr[-1500:]}
+            print(f"  {path.name} [{label}]: {res[label]}")
+    return res
+
+
 def record(name: str, log: dict, **fields) -> None:
     """Add fields (model ID/revision, seeds, export settings, Core ML vs torch check) to the conversion log
     and rewrite it, so every claim about a conversion lives in a results file."""
