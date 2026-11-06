@@ -72,8 +72,12 @@ The experiment that addresses it is training/distillation on this robot's demos 
 ([training/tests/overfit_student.py](training/tests/overfit_student.py)) trains the student from scratch on a tiny
 synthetic set in which each image appears with two instructions and two targets, so an instruction-blind model
 cannot beat a stated floor. Three seeds at each of two learning rates; every seed's full loss curve is kept.
-Output: `results/student/overfit_<date>.json`. This only tests trainability and that the language path carries
-information; it is not a driving or generalisation result and will not be presented as one.
+Output: `results/student/overfit_<date>.json`, with a reading in `results/student/NOTES.md`. This only tests
+trainability and that the language path carries information; it is not a driving or generalisation result and
+will not be presented as one. Outcome: training as configured is not reliable (most runs did not fit the
+synthetic set; the tanh output head saturates early). So no claim is made that the student trains as-is.
+Follow-up experiment (not run): lr warmup, no tanh during training, or a smaller head init, on the same seeds,
+reporting every run.
 
 **B3. Unit tests are shape tests.** Addressed, within scope. [training/tests/test_student.py](training/tests/test_student.py)
 checks output shape and range, parameter count, that padded tokens are ignored, and that the split (text +

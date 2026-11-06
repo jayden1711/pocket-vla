@@ -19,11 +19,14 @@ Updated: 2026-11-06 (daytime run, branch critiques)
 - training/tests/overfit_student.py: SYNTHETIC trainability check (3 seeds x 2 learning rates, all kept).
 - README: status line, reproduction commands, prior work ([verify] marks), NVIDIA/Quatern disclosure.
   PLAN: unsourced BitVLA timing replaced by [verify]; links to CRITIQUES.md.
-RUNS_PLACEHOLDER
+- Runs (outputs in git-ignored results/, read the NOTES there before using the student):
+  student re-export with parity (results/step0/conversion/, history/); synthetic overfit check, 6 runs
+  (results/student/overfit_*.json + results/student/NOTES.md); SmolVLA re-export and multi-trial Mac bench:
+  BENCH_STATUS
 
 ## Decisions taken (daytime 2026-11-06)
 - Branch: the run brief said `day-1106`, the owner's repo decision said `critiques`; used `critiques` (the
-  owner's, more specific). Worktree: .claude/worktrees/critiques.
+  owner's, more specific). Worktree: moved to ~/Downloads/projects/wt/pocket-vla-critiques (writes under .claude/ prompt).
 - Prior work: cited only what looks relevant (SmolVLA, OmniVLA, BitVLA, vla.cpp, MetaMorph, URMA), all
   [verify] since nothing was checked on the web. NOT cited: the MIT weight-space post, PicoGPT, Hirundo /
   CrowdStrike / Booz Allen, RoboStriker (arXiv 2601.22517), Text2Robot: their content and relevance to a phone
