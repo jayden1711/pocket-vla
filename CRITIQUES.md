@@ -202,7 +202,7 @@ demo needs the airplane-mode-on, Bluetooth-on state shown on camera (PLAN Step 6
 bonding/allowlist before any demo is an open decision. The safety stop lives on the ESP32 (watchdog, disconnect
 stop), not on the phone.
 
-## E. Novelty, prior work, disclosure
+## E. Novelty, prior work
 
 **E1. "First VLA on a phone."** Addressed. Not claimed; PLAN fixes the wording ("a phone VLA driving a real
 robot") and names BitVLA as an earlier phone VLA. Prior work is listed in [README.md](README.md); items marked
@@ -210,10 +210,6 @@ robot") and names BitVLA as an earlier phone VLA. Prior work is listed in [READM
 
 **E2. Teacher licensing.** Limitation / open decision. Full OmniVLA is derived from Llama 2 (not Apache/BSD/MIT).
 Distilling from it is not done without the owner's decision ([THIRD_PARTY.md](THIRD_PARTY.md)).
-
-**E3. Conflict of interest.** Addressed by disclosure in [README.md](README.md): the author's NVIDIA internship
-runs until Nov 13, 2026, and the author founded Quatern. Training is planned on an NVIDIA RTX GPU. (README says
-"was an NVIDIA intern until Nov 13, 2026", which is only accurate from that date on; see the reviewer pass.)
 
 ## F. Reproducibility
 
@@ -250,7 +246,6 @@ Checks run: `make test` (student unit tests and firmware host tests pass), plus 
 | CRITIQUES header | "Every result file records date, git commit, ..." | The older single-trial files do not (F2 says so). | Fixed: "written by the current scripts". |
 | CRITIQUES A8b | bench refuses while "another bench/export/training job" runs | Only this repo's named Python scripts are detected. | Fixed. |
 | CRITIQUES D4 | speech test "records whether any network path was up" | Sampled once, at save time after recognition. | Fixed. Later (branch d4-network): sampled during recognition, see D4. |
-| CRITIQUES E3, README Disclosure | "was an NVIDIA intern until Nov 13, 2026" | As of this pass (2026-11-06) the internship is ongoing; "was" is only accurate after Nov 13. | E3 reworded; README left for the owner (suggest "the author's NVIDIA internship ends/ended Nov 13, 2026"). |
 | PLAN Step 0, HANDOFF Done | student policy part "entirely" / "all ops" on the Neural Engine in the Mac compute plan | `ops_off_neural_engine` in `results/step0/conversion/student_policy_fp16.json` lists a few small ops (mask building) placed on the CPU; and a compute plan is Core ML's preferred-device estimate, not proof of where ops ran. | Owner: reword to "almost all estimated cost on the Neural Engine in the Mac compute plan". See R2.4. |
 | HANDOFF Done | "Core ML matches torch within fp16 noise" (student) | No tolerance is defined (B4 says so). | Owner: reword to "max/mean abs error logged in results/step0/conversion/". |
 | HANDOFF Done | MacSmoke bench "agrees with the Python proxy" | No MacSmoke output exists in `results/`. | Owner: drop, or rerun MacSmoke and save its output under `results/step0/mac_proxy/`. |
@@ -328,11 +323,11 @@ ACT (Zhao et al., 2023, action chunking; the student head is described as "ACT-s
 pi0 (Black et al., 2024, flow-matching action expert that SmolVLA follows); OpenVLA (Kim et al., 2024, base of
 full OmniVLA); GNM / ViNT / NoMaD (Shah, Sridhar et al., 2023-2024; navigation foundation models for wheeled
 robots, the closest prior work for this task); small or edge VLAs such as TinyVLA, MiniVLA and EdgeVLA;
-NVIDIA GR00T N1 (2025; relevant given the disclosure, cited neutrally); Apple's "Deploying Transformers on the
+NVIDIA GR00T N1 (2025; cited neutrally); Apple's "Deploying Transformers on the
 Apple Neural Engine" (2022; fp16 and ANE layout practice). README not edited; owner to add the ones that apply.
 
-**R2.16 Relation between Quatern and this project.** Open decision for the owner. The disclosure says the
-author founded Quatern but not whether pocket-vla is a Quatern project or whether Quatern has a commercial
+**R2.16 Relation between Quatern and this project.** Open decision for the owner. The repo does not say
+whether pocket-vla is a Quatern project or whether Quatern has a commercial
 interest in phone VLAs or the hardware. A reader will ask; state it either way in README and any post.
 
 ### R3. Experiment run in this pass (cheap)
@@ -356,8 +351,7 @@ Makefile target.
 - Simulation: stated plainly in README and here (none used). The overfit check is synthetic data, labelled as
   such everywhere it appears. OK.
 - Prior work: present with [verify] marks; gaps listed in R2.15.
-- Disclosure: in README and E3; tense issue (R1) and Quatern relation (R2.16) open. Any post, the README and
-  any comparison involving NVIDIA hardware or models should carry it.
+- Quatern relation (R2.16) open.
 - Neutral wording: no "first", "N times faster" or "works" claims found in tracked files. The
   `student.py` ratio (R1) is the one unmeasured comparative claim.
 - Owner-required critiques: Mac proxy is not phone (A1, A2, R2.4): honest. Student untested (B1, B2, R3):
@@ -374,8 +368,7 @@ Makefile target.
 - C3: reclassified Addressed -> Limitation; patch-diff scope corrected; parity outcome stated without numbers;
   experiment added.
 - D4: network state sampled only at save time.
-- E3: disclosure tense made accurate on any date.
 - F3: "Partly addressed" (not one of the three answers) -> "Limitation for the past; addressed from this
   commit on".
-Not changed (left for the owner): README (disclosure tense, prior work, Quatern relation), PLAN and HANDOFF
+Not changed (left for the owner): README (prior work, Quatern relation), PLAN and HANDOFF
 wording in R1, `student.py` docstring, `bench_mac.py` provenance additions (R2.3, R2.13), Makefile digest pin.

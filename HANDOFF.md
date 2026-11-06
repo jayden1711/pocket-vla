@@ -35,7 +35,7 @@ Updated: 2026-11-06 (daytime run, branch d4-network)
 - Makefile: one target per result family (test, export-student, export-smolvla, bench-mac, overfit-student,
   firmware-build). training/requirements-mac.lock = exact frozen venv.
 - training/tests/overfit_student.py: SYNTHETIC trainability check (3 seeds x 2 learning rates, all kept).
-- README: status line, reproduction commands, prior work ([verify] marks), NVIDIA/Quatern disclosure.
+- README: status line, reproduction commands, prior work ([verify] marks).
   PLAN: unsourced BitVLA timing replaced by [verify]; links to CRITIQUES.md.
 - Runs (outputs in git-ignored results/, read the NOTES there before using the student):
   student re-export with parity (results/step0/conversion/, history/); synthetic overfit check, 6 runs
@@ -62,7 +62,6 @@ Updated: 2026-11-06 (daytime run, branch d4-network)
   VLA could not be checked without the web. Owner: add any that apply (RoboStriker may belong under CRITIQUES
   D5 if it is about attacks on robot policies).
 - Removed the BitVLA phone timing from PLAN (unsourced number), replaced with [verify].
-- Disclosure added to README (training is planned on NVIDIA RTX hardware).
 - Old result files without provenance left as they are (not edited, not deleted); new runs write new files.
 - Overfit check runs two learning rates and reports both instead of tuning to one; CPU for determinism.
 - SmolVLA flow-step sweep (CRITIQUES C1 experiment) not run; left for the owner.

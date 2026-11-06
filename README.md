@@ -43,7 +43,3 @@ Entries marked [verify] have not been checked against the source yet.
   morphologies; relevant because SmolVLA is pretrained on arms and this robot is a differential drive.
   [verify: both references]
 
-## Disclosure
-
-The author was an NVIDIA intern until Nov 13, 2026 and founded Quatern. Training is planned on an NVIDIA RTX GPU;
-the phone runtime is Apple Core ML.

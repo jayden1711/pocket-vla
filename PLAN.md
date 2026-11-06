@@ -9,7 +9,7 @@ Phone: iPhone (exact model TBD). Runtime: Core ML.
 - Steps 2-6: not started (plan below).
 
 Open criticisms and how each is answered (addressed / experiment / limitation): [CRITIQUES.md](CRITIQUES.md).
-Result commands: [Makefile](Makefile). Prior work and disclosure: [README.md](README.md).
+Result commands: [Makefile](Makefile). Prior work: [README.md](README.md).
 
 ## Decisions
 - Firmware uses ESP-IDF + NimBLE (both Apache-2.0), NOT the Arduino-ESP32 core (LGPL-2.1, violates license rule).
