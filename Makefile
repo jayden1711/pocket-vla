@@ -7,6 +7,7 @@
 #   make bench-mac            Mac PROXY latency, all trials kept -> results/step0/mac_proxy/<model>_<date>.json
 #   make overfit-student      SYNTHETIC trainability check -> results/student/overfit_<date>.json
 #   make firmware-build       ESP32-S3 build in the pinned ESP-IDF container
+#   make app-nettest          macOS test of the speech test's network sampler + offline rule (CRITIQUES D4)
 #
 # Phone numbers do not come from here: they come from app/Bench on the iPhone (app/README.md).
 
@@ -17,7 +18,7 @@ TRIALS  ?= 5
 N       ?= 50
 MODELS  ?= student_policy_fp16 student_text_fp16 student_full_fp16 smolvla_base_s10_l16_fp16
 
-.PHONY: test export-student export-smolvla bench-mac overfit-student firmware-test firmware-build
+.PHONY: test export-student export-smolvla bench-mac overfit-student firmware-test firmware-build app-nettest
 
 test: firmware-test
 	$(PY) training/tests/test_student.py
@@ -43,3 +44,8 @@ overfit-student:
 
 firmware-build:
 	cd firmware && docker run --rm -v "$$PWD":/project -w /project espressif/idf:v5.4.1 idf.py build
+
+app-nettest:
+	mkdir -p $(OUT)
+	swiftc -o $(OUT)/nettest app/Bench/Sources/NetworkSampler.swift app/Bench/NetTest/main.swift
+	$(OUT)/nettest

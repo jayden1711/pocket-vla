@@ -1,7 +1,25 @@
 # HANDOFF (2026-11-06)
-Status: CRITIQUES.md, provenance + all-trials logging and Makefile on branch `critiques` (local); still no phone or robot run
-Next: Owner reviews CRITIQUES.md + [verify] refs; clean SmolVLA Mac bench on an idle Mac; then iPhone Step 0 (app/README.md)
-Updated: 2026-11-06 (daytime run, branch critiques)
+Status: CRITIQUES D4 speech-test network sampling on branch `d4-network` (local); still no phone or robot run
+Next: Owner reviews d4-network; on the iPhone: airplane-mode speech test (app/README.md step 3); clean SmolVLA Mac bench
+Updated: 2026-11-06 (daytime run, branch d4-network)
+
+## Daytime run 2026-11-06 (branch `d4-network`, local commits, not pushed): CRITIQUES D4
+- New app/Bench/Sources/NetworkSampler.swift: NWPathMonitor sampled at recognition start, every 250 ms,
+  on every path change, and at the end. Per sample: monotonic ms + ISO time, kind, path status, interface
+  types (wifi/cellular/wired/loopback/other), interface names, isExpensive, isConstrained.
+  `OfflineCheck.evaluate` is the pass/fail rule (rules in the file and in CRITIQUES D4).
+- SpeechTest.swift: result JSON now carries `networkSamples` (full series), `offlineCheck` (offline + reasons),
+  `networkSampleIntervalMs`; `networkAvailable` now means "any sample usable"; the status line says PASSED/FAILED.
+  `running` is now set for the whole run (was set only after the mic started).
+- macOS test: app/Bench/NetTest/main.swift, `make app-nettest` (synthetic pass/fail cases + a short live
+  NWPathMonitor run on the Mac). Passes here; all app sources type-check against the macOS SDK. Not built for
+  iOS (no Xcode / iPhone SDK on this Mac). Test output: results/step0/speech/.
+- CRITIQUES D4 rewritten (now "Experiment": code ready, phone run not done); app/README.md speech section + run order.
+- What the owner runs on the iPhone: build app/Bench in Xcode (app/README.md), airplane mode on, Bluetooth on,
+  Wi-Fi off, tap "Record 5 s, on-device only", check the status line says "offline check PASSED", copy
+  Documents/results/speech_*.json to results/step0/phone/. A FAILED result lists why in `offlineCheck.reasons`.
+  If airplane mode with Bluetooth on still shows a satisfied path (e.g. an "other" interface) [verify], that is
+  a real finding for D4, not a bug to tune away.
 
 ## Daytime run 2026-11-06 (branch `critiques`, local commits, not pushed)
 - CRITIQUES.md at the repo root: each criticism is answered as addressed / experiment / limitation and points
@@ -29,6 +47,13 @@ Updated: 2026-11-06 (daytime run, branch critiques)
   like-for-like SmolVLA vs student pair exists yet.
 
 ## Decisions taken (daytime 2026-11-06)
+- D4 (branch d4-network), conservative choices: any status other than `unsatisfied` counts as a usable path
+  (`requiresConnection` and unknown future statuses fail too); a sample taken before NWPathMonitor's first update
+  fails the check (state unknown); missing start/end samples or a gap > 1 s between samples fail it; the app waits
+  up to 2 s for the first path before starting. Loopback is recorded as its own type (the brief listed
+  wifi/cellular/wired/other) because it never carries traffic off the phone; it does not change the verdict,
+  which uses path status only. The test is a separate `make app-nettest` target, not part of `make test`
+  (needs swiftc + Apple's Network framework, so it would break `make test` on Linux).
 - Branch: the run brief said `day-1106`, the owner's repo decision said `critiques`; used `critiques` (the
   owner's, more specific). Worktree: moved to ~/Downloads/projects/wt/pocket-vla-critiques (writes under .claude/ prompt).
 - Prior work: cited only what looks relevant (SmolVLA, OmniVLA, BitVLA, vla.cpp, MetaMorph, URMA), all
@@ -49,9 +74,11 @@ Updated: 2026-11-06 (daytime run, branch critiques)
 - Two scratch files went to ~/.claude/jobs/.../tmp by mistake (the job's default temp dir); moved to results/_trash/.
 
 ## Blocked (daytime)
+- D4 phone run: needs Xcode + the iPhone (no iPhone SDK on this Mac: `xcrun --sdk iphoneos` fails).
 - Clean SmolVLA multi-trial Mac bench: blocked by PID 82289 still running. When the Mac is idle, run
   `make bench-mac MODELS=smolvla_base_s10_l16_fp16 N=50 TRIALS=5` (long: Neural Engine load takes minutes per
   unit per trial; well over 10 min, so run it in chunks or by hand).
+- d4-network run: ~/projects/bin/make-index still missing; index not regenerated.
 - ~/projects/bin/make-index does not exist on this Mac (no ~/projects/ at all, so no ~/projects/NUC_RULES.md
   either); index not regenerated.
 - Phone/Xcode work: as before, needs Xcode + the owner's iPhone.
@@ -74,7 +101,8 @@ Updated: 2026-11-06 (daytime run, branch critiques)
   Mac proxy numbers in results/step0/{conversion,mac_proxy}/student_*.json. training/tests/test_student.py passes.
 - app/Bench (overnight): SwiftUI bench app: model picker (bundled from training/out/ or dropped into
   Documents), compute units, N-run median/p95/Hz, 10-min sustained run logging thermalState + phys_footprint per
-  prediction, pass-bar check, offline speech test (requiresOnDeviceRecognition, records whether network was up).
+  prediction, pass-bar check, offline speech test (requiresOnDeviceRecognition;
+  network path sampled during recognition + offline check, CRITIQUES D4).
   JSON results to the app's Documents/results/. XcodeGen spec in app/Bench/project.yml; how-to in app/README.md.
   Type-checks against the macOS SDK; the bench core also ran on the Mac via app/Bench/MacSmoke against the
   student models and agrees with the Python proxy. NOT built for iOS (no Xcode here).

@@ -181,11 +181,22 @@ run exists (PLAN Steps 5 and 6). No robot, no closed loop and no demos exist tod
 **D3. Demo videos can be cherry-picked.** Experiment (not run). Report every trial with its outcome and the
 success rate with denominators; keep full attempt logs in `results/`; film the airplane-mode toggle on camera.
 
-**D4. "Offline" must be proven, not asserted.** Addressed for speech, experiment for the demo. The speech test sets
-`requiresOnDeviceRecognition` and records whether any network path was up when the result is saved, i.e.
-after recognition ends; the network state is not sampled during recognition
-([SpeechTest.swift](app/Bench/Sources/SpeechTest.swift), `saveResult`). The full demo needs the airplane-mode-on,
-Bluetooth-on state shown on camera (PLAN Step 6).
+**D4. "Offline" must be proven, not asserted.** Experiment, for speech and for the demo; the speech code is
+ready, the run is not done. The speech test sets `requiresOnDeviceRecognition` and samples the network path
+(`NWPathMonitor`) during recognition: at recognition start, every 250 ms while it runs, on every path change,
+and at the end. Each sample records time, path status, interface types (wifi/cellular/wired/loopback/other),
+isExpensive and isConstrained; the full series is saved in the result JSON (`networkSamples`). The result fails
+the offline check (`offlineCheck.offline == false`, with `reasons`) if any sample shows a usable path
+(`satisfied`, `requiresConnection` or an unknown status), if a sample was taken before the first path update,
+if the start or end sample is missing, or if two samples are more than 1 s apart
+([NetworkSampler.swift](app/Bench/Sources/NetworkSampler.swift),
+[SpeechTest.swift](app/Bench/Sources/SpeechTest.swift)). The sampler and the rule are tested on macOS with
+synthetic series and a short live run (`make app-nettest`, [NetTest](app/Bench/NetTest/main.swift)).
+Experiment: in airplane mode with Bluetooth on, run "Record 5 s, on-device only" on the iPhone
+(app/README.md); output goes to `results/step0/phone/speech_*.json`. Not run (needs Xcode and the iPhone).
+Limitations: a path sample shows that no network path existed, not that no packet was sent; samples are
+250 ms apart, so a path that comes and goes between ticks is seen only through the path-change event, if NWPathMonitor reports it [verify]. The full
+demo needs the airplane-mode-on, Bluetooth-on state shown on camera (PLAN Step 6).
 
 **D5. Safety: anyone nearby can connect over BLE.** Limitation. No pairing or authentication yet (PLAN Risks);
 bonding/allowlist before any demo is an open decision. The safety stop lives on the ESP32 (watchdog, disconnect
@@ -238,7 +249,7 @@ Checks run: `make test` (student unit tests and firmware host tests pass), plus 
 | CRITIQUES B3 (old) | "the split (text + policy) export equals the full model" | The test compares torch modules, not exported packages. | Fixed. |
 | CRITIQUES header | "Every result file records date, git commit, ..." | The older single-trial files do not (F2 says so). | Fixed: "written by the current scripts". |
 | CRITIQUES A8b | bench refuses while "another bench/export/training job" runs | Only this repo's named Python scripts are detected. | Fixed. |
-| CRITIQUES D4 | speech test "records whether any network path was up" | Sampled once, at save time after recognition. | Fixed. |
+| CRITIQUES D4 | speech test "records whether any network path was up" | Sampled once, at save time after recognition. | Fixed. Later (branch d4-network): sampled during recognition, see D4. |
 | CRITIQUES E3, README Disclosure | "was an NVIDIA intern until Nov 13, 2026" | As of this pass (2026-11-06) the internship is ongoing; "was" is only accurate after Nov 13. | E3 reworded; README left for the owner (suggest "the author's NVIDIA internship ends/ended Nov 13, 2026"). |
 | PLAN Step 0, HANDOFF Done | student policy part "entirely" / "all ops" on the Neural Engine in the Mac compute plan | `ops_off_neural_engine` in `results/step0/conversion/student_policy_fp16.json` lists a few small ops (mask building) placed on the CPU; and a compute plan is Core ML's preferred-device estimate, not proof of where ops ran. | Owner: reword to "almost all estimated cost on the Neural Engine in the Mac compute plan". See R2.4. |
 | HANDOFF Done | "Core ML matches torch within fp16 noise" (student) | No tolerance is defined (B4 says so). | Owner: reword to "max/mean abs error logged in results/step0/conversion/". |
