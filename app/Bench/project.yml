@@ -1,0 +1,45 @@
+# XcodeGen spec for the Step 0 bench app. Generate the (git-ignored) Xcode project with:
+#   cd app/Bench && xcodegen generate && open Bench.xcodeproj
+# Then set your signing team in Xcode (Signing & Capabilities) and run on the iPhone.
+name: Bench
+options:
+  bundleIdPrefix: dev.pocketvla
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""   # set locally in Xcode; not committed
+targets:
+  Bench:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      # Models from training/out/ (git-ignored, produced by training/export/*). Xcode compiles each
+      # .mlpackage (Compile Sources phase) into a .mlmodelc in the app bundle. Missing ones are skipped;
+      # you can also copy a .mlpackage into the app's Documents folder with Finder file sharing and it is
+      # compiled on device. SmolVLA adds ~0.8 GB to the app; comment it out for faster installs.
+      - path: ../../training/out/student_policy_fp16.mlpackage
+        optional: true
+      - path: ../../training/out/student_full_fp16.mlpackage
+        optional: true
+      - path: ../../training/out/student_text_fp16.mlpackage
+        optional: true
+      - path: ../../training/out/smolvla_base_s10_l16_fp16.mlpackage
+        optional: true
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: VLA Bench
+        UILaunchScreen: {}
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        NSMicrophoneUsageDescription: Records a spoken instruction for the on-device speech test.
+        NSSpeechRecognitionUsageDescription: Transcribes the spoken instruction on device (no network).
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.pocketvla.bench
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
