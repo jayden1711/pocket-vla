@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+# Model artifacts (large, regenerate with training/export/*)
+training/out/
+*.mlpackage
+*.mlmodelc
+*.pth
+*.pt
+*.safetensors
+*.onnx
+# ESP-IDF build output (sdkconfig is generated from sdkconfig.defaults)
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/test/test_control
+firmware/test/*.dSYM/
+# Xcode / iOS
+app/**/*.xcodeproj/
+app/**/xcuserdata/
+DerivedData/
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
+.claude/
+
+# Results, logs and write-ups stay local until the owner approves publishing
+results/
