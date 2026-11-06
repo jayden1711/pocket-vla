@@ -15,5 +15,7 @@ exported `.mlpackage` files go to git-ignored `training/out/`. Keep this in sync
 | NHirose/OmniVLA | MIT (code) | 5182600cb4a9 | distillation teacher (planned) |
 | NHirose/omnivla-original (HF) | MIT (card) | e36a84d4923c041149d441f93f3bdb7092bb5f07 | teacher; LICENSE RISK below |
 | NHirose/omnivla-edge (HF) | MIT | b1361b7e24f101edea795a98b00a826b61a97394 | possible candidate (c) |
+| lukemelas/EfficientNet-PyTorch (efficientnet_pytorch) | Apache-2.0 | pip 0.7.1 | OmniVLA-edge encoder (candidate (c)) |
+| openai/clip-vit-base-patch32 (HF) | MIT (OpenAI CLIP) | 3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268 | OmniVLA-edge text features (candidate (c)) |
 
 License risks: OmniVLA (full) is fine-tuned from openvla-7b, whose LLM is Llama 2 (Llama 2 Community License, not Apache/BSD/MIT). Distilling from it needs a decision. OmniVLA-edge uses EfficientNet-B0 (efficientnet_pytorch, Apache-2.0) + OpenAI CLIP text features (MIT); verify those pins before use. BDD images in OmniVLA data carry the BDD license.

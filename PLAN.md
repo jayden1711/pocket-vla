@@ -4,7 +4,7 @@ Claim (use verbatim): "a phone VLA driving a real robot." Never "first VLA on a 
 Phone: iPhone (exact model TBD). Runtime: Core ML.
 
 ## Status
-- Step 0: in progress. See HANDOFF.md. SmolVLA converts to Core ML; only Mac-proxy timings so far, no phone numbers yet.
+- Step 0: in progress. See HANDOFF.md. SmolVLA and the 76M student convert to Core ML; bench app (app/Bench) written but not built (needs Xcode). Only Mac-proxy timings so far, no phone numbers yet.
 - Step 1: firmware written, host-tested, builds for ESP32-S3. Not yet on hardware.
 - Steps 2-6: not started (plan below).
 
@@ -26,12 +26,23 @@ Phone: iPhone (exact model TBD). Runtime: Core ML.
 | NHirose/OmniVLA | MIT (code) | 5182600cb4a9 | distillation teacher (planned) |
 | NHirose/omnivla-original (HF) | MIT (card) | e36a84d4923c041149d441f93f3bdb7092bb5f07 | teacher; LICENSE RISK below |
 | NHirose/omnivla-edge (HF) | MIT | b1361b7e24f101edea795a98b00a826b61a97394 | possible candidate (c) |
+| lukemelas/EfficientNet-PyTorch (efficientnet_pytorch) | Apache-2.0 | pip 0.7.1 | OmniVLA-edge encoder (candidate (c)) |
+| openai/clip-vit-base-patch32 (HF) | MIT (OpenAI CLIP) | 3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268 | OmniVLA-edge text features (candidate (c)) |
 
 License risks: OmniVLA (full) is fine-tuned from openvla-7b, whose LLM is Llama 2 (Llama 2 Community License, not Apache/BSD/MIT). Distilling from it needs a decision. OmniVLA-edge uses EfficientNet-B0 (efficientnet_pytorch, Apache-2.0) + OpenAI CLIP text features (MIT); verify those pins before use. BDD images in OmniVLA data carry the BDD license.
 
 ## Step 0 results so far (Mac M3 PROXY, not phone)
 SmolVLA base, 1 cam 512x512, 16 lang tokens, 10 Euler steps, fp16, chunk 50 (= 5.0 s at 10 Hz).
 Numbers are in `results/step0/` (git-ignored) until the owner approves publishing.
+
+Candidate (b) student, random weights (training/models/student.py): ViT-S/16 224x224 + 2-layer text encoder
+(SmolVLM2 tokenizer vocab, 16 tokens) + 10-layer 512-d fusion with 16 learned action queries, direct
+regression of a 16x2 chunk (= 1.6 s at 10 Hz), ~76M params. Exported as one model and as a text part (once per
+instruction) + per-frame policy part. Converted with no patches; Mac compute plan puts the policy part
+entirely on the Neural Engine, the text part on the GPU (embedding gather). Numbers in `results/step0/`.
+
+Candidate (c) OmniVLA-edge: export script for language-goal mode written (masked pose/map/goal-image branches
+pruned, checked against upstream forward); not run yet.
 
 Conversion issues found and fixed (training/export/): `bucketize` (vision pos ids), `new_ones` (vision patch mask), `reciprocal` on int32 (converter override), in-place slice assign in `apply_rope`, silent fp16 NaN from finfo(float32).min attention mask. Input name `state` is reserved by Core ML -> `robot_state`.
 
