@@ -1,4 +1,7 @@
 # HANDOFF (2026-11-06)
+Status: Firmware written (not hardware-tested); SmolVLA Core ML export and Mac proxy bench done
+Next: Write the 76M student model + Core ML export; then the Xcode bench app
+Updated: 2026-11-06
 
 ## Done
 - Repo skeleton: firmware/, app/ (empty), training/, eval/, PLAN.md (licenses, decisions, plan).

@@ -25,7 +25,9 @@ DerivedData/
 .DS_Store
 .vscode/
 .idea/
-.claude/
+.claude/*
+!.claude/settings.json
 
 # Results, logs and write-ups stay local until the owner approves publishing
 results/
+.claude/worktrees/
