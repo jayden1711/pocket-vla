@@ -10,7 +10,7 @@ Layout (all plain PyTorch, no third-party model code, so nothing to pin):
                                                                                    -> actions [1,16,2]
 
 The action head is a direct regression of a 16-step chunk of 2 wheel commands (ACT-style, one forward
-pass), not flow matching: on the phone one pass is ~10x cheaper than 10 Euler steps. Weights are random
+pass), not flow matching (the flow-step sweep in CRITIQUES C1 would measure the cost difference). Weights are random
 for Step 0 (latency only); training/distillation is Step 4.
 
 The text encoder can be exported on its own (`TextEncoder`) and run once per instruction, so the per-frame

@@ -43,8 +43,8 @@ Numbers are in `results/step0/` (git-ignored) until the owner approves publishin
 Candidate (b) student, random weights (training/models/student.py): ViT-S/16 224x224 + 2-layer text encoder
 (SmolVLM2 tokenizer vocab, 16 tokens) + 10-layer 512-d fusion with 16 learned action queries, direct
 regression of a 16x2 chunk (= 1.6 s at 10 Hz), ~76M params. Exported as one model and as a text part (once per
-instruction) + per-frame policy part. Converted with no patches; Mac compute plan puts the policy part
-entirely on the Neural Engine, the text part on the GPU (embedding gather). Numbers in `results/step0/`.
+instruction) + per-frame policy part. Converted with no patches; Mac compute plan puts almost all estimated cost
+of the policy part on the Neural Engine (a compute plan is an estimate, not proof of where ops ran), the text part on the GPU (embedding gather). Numbers in `results/step0/`.
 
 Candidate (c) OmniVLA-edge: export script for language-goal mode written (masked pose/map/goal-image branches
 pruned, checked against upstream forward); not run yet.

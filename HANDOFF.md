@@ -95,8 +95,9 @@ Updated: 2026-11-06 (daytime run, branch d4-network)
   Mac M3 proxy bench done; numbers in results/step0/ (local, git-ignored). NOT phone numbers.
 - Step 0 candidate (b) 76M student (overnight): training/models/student.py (ViT-S/16 + 2-layer text enc +
   10-layer fusion, 16x2 chunk, direct regression, random weights), training/export/export_student.py writes
-  student_full / student_text / student_policy .mlpackages. Converted with no patches, Core ML matches torch
-  within fp16 noise, outputs finite. Policy part: all ops on the Neural Engine in the Mac compute plan.
+  student_full / student_text / student_policy .mlpackages. Converted with no patches, Core ML vs torch
+  max/mean abs error logged in results/step0/conversion/, outputs finite. Policy part: almost all estimated cost on the
+  Neural Engine in the Mac compute plan.
   Mac proxy numbers in results/step0/{conversion,mac_proxy}/student_*.json. training/tests/test_student.py passes.
 - app/Bench (overnight): SwiftUI bench app: model picker (bundled from training/out/ or dropped into
   Documents), compute units, N-run median/p95/Hz, 10-min sustained run logging thermalState + phys_footprint per
@@ -104,7 +105,7 @@ Updated: 2026-11-06 (daytime run, branch d4-network)
   network path sampled during recognition + offline check, CRITIQUES D4).
   JSON results to the app's Documents/results/. XcodeGen spec in app/Bench/project.yml; how-to in app/README.md.
   Type-checks against the macOS SDK; the bench core also ran on the Mac via app/Bench/MacSmoke against the
-  student models and agrees with the Python proxy. NOT built for iOS (no Xcode here).
+  student models (no MacSmoke output is saved in results/ yet). NOT built for iOS (no Xcode here).
 - Candidate (c) OmniVLA-edge: training/export/export_omnivla_edge.py written (language-goal mode, masked
   branches pruned, compares against upstream forward, plus CLIP B/32 text encoder export). NOT RUN (see below).
 
